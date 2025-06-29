@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HENDER Relationship Timeline</title>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+  <!-- Tabletop.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.5.1/tabletop.min.js"></script>
+  <!-- Vis.js Timeline -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/vis-timeline/7.4.9/vis-timeline-graph2d.min.css" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-timeline/7.4.9/vis-timeline-graph2d.min.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #fafafc; margin:0; padding:0; }
+    .header {
+      background: #fff;
+      border-bottom: 4px solid #111;
+      text-align: center;
+      padding: 2.5rem 1rem 1rem 1rem;
+      margin-bottom: 2rem;
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 3rem;
+      font-weight: bold;
+      letter-spacing: .08em;
+      color: #000;
+      text-shadow: 1px 1px 0 #ffe766, 2px 2px 0 #9966ff, 0 0 6px #fff6;
+    }
+    .header .quote {
+      font-size: 1.2rem;
+      color: #444;
+      font-style: italic;
+      margin-top: 0.6em;
+      margin-bottom: 0;
+      letter-spacing: .01em;
+    }
+    .header .slogan {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-top: 1em;
+      color: #000;
+      letter-spacing: .16em;
+      background: #ffe766;
+      border-radius: 6px;
+      padding: .15em .9em;
+      display: inline-block;
+      box-shadow: 1px 2px 0 #0002;
+    }
+    .panel { background:#fff; border:4px solid #000; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,0.07); margin:0 auto 1.7rem auto; padding:1.2rem 1rem; max-width: 1100px;}
+    .controls, .summary { display:flex; gap:1.1rem; flex-wrap:wrap; align-items:center; }
+    .summary .stat { flex:1; text-align:center; }
+    #charts { display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; max-width: 1100px; margin: 0 auto; }
+    .chart-box { position: relative; }
+    .chart-box h5 { margin:0 0 .5rem; color:#000; font-weight:bold; font-size:1.13rem; }
+    #timeline { height: 220px; }
+    #detailPanel { 
+      position:fixed; top:8%; left:50%; transform:translateX(-50%);
+      background:#fff; border:4px solid #000; border-radius:8px; padding:1.2rem;
+      width:94%; max-width:600px; display:none; z-index:10;
+      box-shadow:0 8px 16px #0002;
+    }
+    #detailPanel .close { float:right; cursor:pointer; font-size:1.3rem; color:#111; }
+    #detailPanel ul { max-height:350px; overflow-y:auto; padding-left:1.2rem; }
+    @media (max-width: 800px) {
+      #charts { grid-template-columns:1fr; }
+      .panel { padding: 0.6rem 0.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>HENDER</h1>
+    <div class="quote">
+      Die bargeheimzette veerlat val vandoeg, het stikker ons bij Wuppertal.
+    </div>
+    <div class="slogan">
+      Henry &amp; Donner
+    </div>
+  </div>
+
+  <!-- CONTROLS & SUMMARY -->
+  <div class="panel">
+    <div class="controls">
+      <div>
+        <label for="startDate">Start</label><br>
+        <input type="date" id="startDate">
+      </div>
+      <div>
+        <label for="endDate">End</label><br>
+        <input type="date" id="endDate">
+      </div>
+      <div>
+        <label><input type="checkbox" id="toggleXander" checked> Xander</label><br>
+        <label><input type="checkbox" id="toggleHenri" checked> Henri</label>
+      </div>
+    </div>
+    <hr>
+    <div class="summary">
+      <div class="stat">
+        <strong>Total Messages</strong><br>
+        <span id="totalMsgs">–</span>
+      </div>
+      <div class="stat">
+        <strong>Avg Response (min)</strong><br>
+        <span id="avgResp">–</span>
+      </div>
+      <div class="stat">
+        <strong>Conflict Count</strong><br>
+        <span id="conflictCnt">–</span>
+      </div>
+      <div class="stat">
+        <strong>Affection Count</strong><br>
+        <span id="affectionCnt">–</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS -->
+  <div id="charts">
+    <div class="panel chart-box">
+      <h5>1. Daily Activity</h5>
+      <canvas id="activityChart"></canvas>
+    </div>
+    <div class="panel chart-box">
+      <h5>2. Communication Balance (%)</h5>
+      <canvas id="balanceChart"></canvas>
+    </div>
+    <div class="panel chart-box">
+      <h5>3. Avg Response Time</h5>
+      <canvas id="responseChart"></canvas>
+    </div>
+    <div class="panel chart-box">
+      <h5>4. Conflict Frequency</h5>
+      <canvas id="conflictChart"></canvas>
+    </div>
+    <div class="panel chart-box">
+      <h5>5. Affection Frequency</h5>
+      <canvas id="affectionChart"></canvas>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="panel" style="margin-top:2.3rem;">
+    <h5 style="margin:0 0 .6rem; font-weight:bold;">Timeline &amp; All Moments</h5>
+    <div id="timeline"></div>
+    <div style="margin-top:0.7em; font-size:.99em; color:#444;">
+      <strong>Legend:</strong>
+      <span style="margin-left:1.5em;">🔥 = “Fuck-it”/Aha</span>
+      <span style="margin-lef
