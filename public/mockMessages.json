@@ -1,0 +1,23 @@
+[
+  {
+    "id": "msg1",
+    "timestamp": "2024-11-01T22:30:00Z",
+    "sender": "Alex",
+    "message": "I\u2019m glad we talked today. It meant a lot.",
+    "emotion": "Support"
+  },
+  {
+    "id": "msg2",
+    "timestamp": "2024-11-02T18:12:00Z",
+    "sender": "Sam",
+    "message": "I'm feeling kind of off lately. We should talk.",
+    "emotion": "Conflict"
+  },
+  {
+    "id": "msg3",
+    "timestamp": "2024-11-03T08:15:00Z",
+    "sender": "Alex",
+    "message": "That weekend together was so special \u2764\ufe0f",
+    "emotion": "Intimacy"
+  }
+]
