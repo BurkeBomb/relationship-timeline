@@ -1,41 +1,46 @@
+'use client';
+
 import Timeline from '@/components/Timeline';
+import InsightPanel from '@/components/InsightPanel';
+import SearchBar from '@/components/SearchBar';
 import EmotionChart from '@/components/EmotionChart';
-import InsightsPanel from '@/components/InsightsPanel';
-import WordSearch from '@/components/WordSearch';
 
-export default function Home() {
+export default function HomePage() {
   return (
-    <main className="min-h-screen bg-gray-100 p-6">
-      <div className="max-w-5xl mx-auto space-y-10">
-
-        {/* Intro Header */}
-        <section className="text-center">
-          <h1 className="text-4xl font-extrabold mb-2">💌 Relationship Timeline</h1>
-          <p className="text-gray-600 text-lg">
-            Explore your emotional journey through a visual chat timeline, trends, search, and AI insights.
+    <main className="min-h-screen bg-gradient-to-b from-pink-100 to-blue-100 p-6">
+      <div className="max-w-7xl mx-auto space-y-10">
+        <header className="text-center">
+          <h1 className="text-5xl font-extrabold tracking-tight text-gray-800 drop-shadow-md">
+            Relationship Timeline
+          </h1>
+          <p className="mt-2 text-lg text-gray-600 italic">
+            Explore your journey. Understand your love story.
           </p>
+        </header>
+
+        {/* Word Search */}
+        <section className="bg-white shadow rounded-lg p-4">
+          <SearchBar />
         </section>
 
-        {/* Timeline Viewer */}
-        <section>
+        {/* Interactive Timeline */}
+        <section className="bg-white shadow rounded-lg p-4">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Timeline</h2>
           <Timeline />
         </section>
 
-        {/* Emotional Trends Dashboard */}
-        <section>
-          <h2 className="text-2xl font-bold mb-4">📊 Emotional Trends</h2>
+        {/* Emotion Analytics */}
+        <section className="bg-white shadow rounded-lg p-4">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Emotional Trends</h2>
           <EmotionChart />
         </section>
 
-        {/* Insights Panel */}
-        <section>
-          <InsightsPanel />
+        {/* AI Insight Panel */}
+        <section className="bg-white shadow rounded-lg p-4">
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">AI Insights</h2>
+          <InsightPanel />
         </section>
-
-        {/* Word Search Feature */}
-        <section>
-          <WordSearch />
-        </section>
-        
       </div>
     </main>
+  );
+}
