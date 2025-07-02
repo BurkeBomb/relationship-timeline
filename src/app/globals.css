@@ -1,26 +1,56 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ========== GLOBAL STYLES ========== */
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-white text-gray-900 antialiased leading-relaxed;
+  font-family: 'Inter', sans-serif;
+  scroll-behavior: smooth;
+}
+
+/* ========== TIMELINE COLORS ========== */
+.event-intimacy {
+  @apply bg-pink-400 text-white;
+}
+
+.event-conflict {
+  @apply bg-red-500 text-white;
+}
+
+.event-humor {
+  @apply bg-yellow-300 text-black;
+}
+
+.event-deep-talk {
+  @apply bg-blue-500 text-white;
+}
+
+.event-support {
+  @apply bg-green-500 text-white;
+}
+
+/* ========== TOOLTIP ========== */
+.tooltip {
+  @apply absolute z-50 p-2 text-sm rounded shadow-lg bg-black text-white;
+}
+
+/* ========== EMOTION TAGS ========== */
+.emotion-tag {
+  @apply inline-block text-xs font-bold rounded-full px-2 py-1 m-1;
+}
+
+/* ========== INSIGHTS PANEL ========== */
+.insights-panel {
+  @apply bg-gray-100 p-4 rounded-lg shadow-inner border-l-4 border-blue-400;
+}
+
+/* ========== BUTTONS ========== */
+.button-primary {
+  @apply bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition;
+}
+
+.button-secondary {
+  @apply bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 transition;
 }
