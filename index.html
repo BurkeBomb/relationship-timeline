@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>HENDER Relationship Timeline</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Tabletop.js for Sheets import -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tabletop.js/1.5.1/tabletop.min.js"></script>
+  <!-- Vis.js Timeline -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-timeline/7.4.9/vis-timeline-graph2d.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-timeline/7.4.9/vis-timeline-graph2d.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', 'Montserrat', 'Arial', sans-serif;
+      margin: 0; background: linear-gradient(135deg, #f9eaff 0%, #b3ffe0 100%);
+      min-height: 100vh;
+    }
+    .header {
+      text-align: center;
+      padding: 2rem 1rem 1rem 1rem;
+      background: repeating-linear-gradient(135deg,#fff 0 12px,#ffe766 12px 24px);
+      border-bottom: 6px solid #4b2ef8;
+      box-shadow: 0 6px 20px #33226e0d;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .header h1 {
+      margin: 0 0 .6em 0;
+      font-size: 3.3rem;
+      font-weight: 900;
+      letter-spacing: .08em;
+      color: #4b2ef8;
+      text-shadow: 0 2px 24px #0002, 1px 1px #ffe766;
+    }
+    .header .quote {
+      font-size: 1.45rem;
+      color: #111;
+      background: #ffe766;
+      border-radius: 8px;
+      padding: .3em 1em;
+      font-style: italic;
+      box-shadow: 1px 3px 0 #0001;
+      display: inline-block;
+      margin-bottom: 0.2em;
+      font-weight: 500;
+    }
+    .panel {
+      background: #fffdfc;
+      border: 3px solid #4b2ef8;
+      border-radius: 13px;
+      box-shadow: 0 6px 32px #4422c011, 0 2px 12px #ffe76644;
+      max-width: 1150px;
+      margin: 2.5rem auto 1.4rem auto;
+      padding: 1.8rem 1.4rem 1.4rem 1.4rem;
+      position: relative;
+    }
+    .controls, .summary {
+      display: flex;
+      gap: 2.2rem;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.4rem;
+    }
+    .summary .stat {
+      flex: 1;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.11rem;
+      color: #322288;
+    }
+    #charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.6rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .chart-box {
+      background: linear-gradient(112deg,#f3ebff 60%,#d2fdff 100%);
+      border-radius: 10px;
+      box-shadow: 0 2px 12px #33116610;
+      padding: 1.2rem 1rem;
+    }
+    .chart-box h5 {
+      margin: 0 0 .5rem;
+      color: #322288;
+      font-weight: bold;
+      font-size: 1.13rem;
+      text-shadow: 0 1px #ffe766;
+    }
+    #timeline {
+      height: 260px;
+      background: linear-gradient(90deg,#ffe76622 20%,#f3ebff77 80%);
+      border-radius: 8px;
+      border: 2.5px solid #000;
+      margin-top: 0.9em;
+    }
+    #detailPanel {
+      position: fixed;
+      top: 11%; left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border: 4px solid #4b2ef8;
+      border-radius: 15px;
+      padding: 1.3rem 1.3rem 1rem 1.3rem;
+      width: 96%; max-width: 650px;
+      display: none;
+      z-index: 200;
+      box-shadow: 0 8px 40px #0002;
+      font-size: 1.03rem;
+    }
+    #detailPanel .close {
+      float: right;
+      cursor: pointer;
+      font-size: 1.3rem;
+      color: #4b2ef8;
+    }
+    #detailPanel ul {
+      max-height: 320px;
+      overflow-y: auto;
+      padding-left: 1.4rem;
+    }
+    #detailPanel li {
+      margin-bottom: 0.5em;
+      background: #f3ebff77;
+      border-left: 6px solid transparent;
+      padding: .3em .6em;
+      border-radius: 7px;
+      font-size: 1.06em;
+      transition: background 0.17s;
+    }
+    #detailPanel li.isH { background: #ffe4e7; }
+    #detailPanel li.isC { border-left: 6px solid #ff2b48; }
+    #detailPanel li.isB { border-left: 6px solid #0097e6; }
+    #detailPanel li.isN { border-left: 6px solid #222; }
+    #detailPanel li.isS { border-left: 6px solid #ff7c8a; }
+    #detailPanel li.isA { border-left: 6px solid #9966ff; }
+    @media (max-width: 900px) {
+      #charts { grid-template-columns: 1fr; }
+      .panel { padding: 1rem .4rem; }
+    }
+    .moment-legend {
+      margin-top: .85em; font-size: 1.07em; color: #222;
+      text-align: center; font-weight: bold;
+      letter-spacing: 0.03em;
+      background: #e9e6ff;
+      border-radius: 7px;
+      padding: .15em 1em;
+      box-shadow: 0 1px 2px #8881;
+      border: 1.5px solid #4b2ef8;
+      max-width: 700px;
+      margin-left: auto; margin-right: auto;
+    }
+    .moment-legend span { margin-left: 1.25em;}
+  </style>
+</head>
+<body>
+  <!-- HEADER -->
+  <div class="header">
+    <h1>HENDER</h1>
+    <div class="quote">
+      No Regrets I Fear, Fear No Regrets
+    </div>
+  </div>
+  <!-- CONTROLS & SUMMARY -->
+  <div class="panel">
+    <div class="controls">
+      <div>
+        <label for="startDate">Start</label><br>
+        <input type="date" id="startDate">
+      </div>
+      <div>
+        <label for="endDate">End</label><br>
+        <input type="date" id="endDate">
+      </div>
+      <div>
+        <label><input type="checkbox" id="toggleXander" checked> Xander</label><br>
+        <label><input type="checkbox" id="toggleHenri" checked> Henri</label>
+      </div>
+    </div>
+    <hr>
+    <div class="summary">
+      <div class="stat">
+        <strong>Total Messages</strong><br>
+        <span id="totalMsgs">–</span>
+      </div>
+      <div class="stat">
+        <strong>Avg Response (min)</strong><br>
+        <span id="avgResp">–</span>
+      </div>
+      <div class="stat">
+        <strong>Conflict Count</strong><br>
+        <span id="conflictCnt">–</span>
+      </div>
+      <div class="stat">
+        <strong>Affection Count</strong><br>
+        <span id="affectionCnt">–</span>
+      </div>
+    </div>
+  </div>
+  <!-- CHARTS -->
+  <div id="charts">
+    <div class="panel chart-box">
+      <h5>1. Daily Activity</h5>
+      <canvas id="activityChart"></canvas>
+    </div>
+    <div class="panel chart-box">
+      <h5>2. Communication Balance (%)</h5>
+      <canvas id="balanceChart"></canvas>
+    </div>
+    <div class="panel chart-box">
+      <h5>3. Avg Response Time</h5>
+      <canvas id="responseChart"></canvas>
+    </div>
+    <div class="panel chart-box">
+      <h5>4. Conflict Frequency</h5>
+      <canvas id="conflictChart"></canvas>
+    </div>
+    <div class="panel chart-box">
+      <h5>5. Affection Frequency</h5>
+      <canvas id="affectionChart"></canvas>
+    </div>
+  </div>
+  <!-- TIMELINE -->
+  <div class="panel" style="margin-top:2.3rem;">
+    <h5 style="margin:0 0 .6rem; font-weight:bold; font-size:1.15em; color:#4b2ef8;">Timeline &amp; All Moments</h5>
+    <div id="timeline"></div>
+    <div class="moment-legend">
+      <strong>Legend:</strong>
+      <span>🔥 = “Fuck-it”/Aha</span>
+      <span>❗ = Calm-the-fuck-down</span>
+      <span>🌬️ = Breathe</span>
+      <span>⏰ = “Nou”</span>
+      <span>❤️ = Heat/Sexual</span>
+    </div>
+  </div>
+  <!-- DETAIL POP-UP -->
+  <div id="detailPanel">
+    <span class="close" onclick="detailPanel.style.display='none'">&times;</span>
+    <h4 id="detailTitle" style="margin-top:0;"></h4>
+    <ul id="detailList"></ul>
+  </div>
+<script>
+(function(){
+  // USE YOUR NEW SHEET URL HERE:
+  const publicSheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQqnvHaOlo04QSMTyXljxq17cF91kOyyo-8Hb9xW_hPeHJI7jEGwarHBug-j-WbSQ/pubhtml';
+
+  // Keyword lists for each “moment” (all lowercase)
+  const ahaKW      = ['fuck it','aha'];
+  const conflictKW = ['push','stoot','frusteer','back','terug'];
+  const breatheKW  = ['breathe','asem','asemhaal'];
+  const nouKW      = ['nou'];
+  const sexualKW   = ['sex','naai','sjag','neuk','fuck','fokken','hot','drip','eufor','kom'];
+  const affectionKW = ['love','versot','mal oor','soen','kus'];
+
+  let rawData = [], processed = null, charts = {}, timeline;
+
+  function hasKW(text, list){
+    text = (text||'').toLowerCase();
+    return list.some(kw => text.includes(kw));
+  }
+
+  function parseRow(r){
+    return {
+      datetime: new Date(r['Date'] + ' ' + r['Time']),
+      speaker:  r['Speaker'],
+      message:  r['Message']
+    };
+  }
+
+  function processData(arr){
+    arr.sort((a,b)=>a.datetime - b.datetime);
+    const byDay = {}, resp={ Xander:[], Henri:[] };
+    arr.forEach((m,i)=>{
+      const day = m.datetime.toISOString().slice(0,10);
+      if(!byDay[day]) byDay[day] = { Xander:0, Henri:0, conflict:0, affection:0, aha:0, breathe:0, nou:0, sexual:0, msgs:[] };
+      byDay[day][m.speaker]++;
+
+      const isC = hasKW(m.message, conflictKW),
+            isA = hasKW(m.message, affectionKW),
+            isH = hasKW(m.message, ahaKW),
+            isB = hasKW(m.message, breatheKW),
+            isN = hasKW(m.message, nouKW),
+            isS = hasKW(m.message, sexualKW);
+
+      if(isC) byDay[day].conflict++;
+      if(isA) byDay[day].affection++;
+      if(isH) byDay[day].aha++;
+      if(isB) byDay[day].breathe++;
+      if(isN) byDay[day].nou++;
+      if(isS) byDay[day].sexual++;
+
+      byDay[day].msgs.push({ ...m, isC, isA, isH, isB, isN, isS });
+
+      if(i>0 && arr[i-1].speaker !== m.speaker){
+        resp[m.speaker].push((m.datetime - arr[i-1].datetime)/60000);
+      }
+    });
+
+    const days = Object.keys(byDay).sort();
+    return {
+      days,
+      xander:    days.map(d=>byDay[d].Xander),
+      henri:     days.map(d=>byDay[d].Henri),
+      conflict:  days.map(d=>byDay[d].conflict),
+      affection: days.map(d=>byDay[d].affection),
+      aha:       days.map(d=>byDay[d].aha),
+      breathe:   days.map(d=>byDay[d].breathe),
+      nou:       days.map(d=>byDay[d].nou),
+      sexual:    days.map(d=>byDay[d].sexual),
+      avgResp: [
+        resp.Xander.length? (resp.Xander.reduce((a,b)=>a+b)/resp.Xander.length).toFixed(1):0,
+        resp.Henri.length?  (resp.Henri.reduce((a,b)=>a+b)/resp.Henri.length).toFixed(1):0
+      ],
+      byDay
+    };
+  }
+
+  function updateSummary(p){
+    const totX = p.xander.reduce((a,b)=>a+b,0),
+          totH = p.henri.reduce((a,b)=>a+b,0);
+    document.getElementById('totalMsgs').innerText   = `Xander: ${totX}\nHenri: ${totH}`;
+    document.getElementById('avgResp').innerText     = `Xander: ${p.avgResp[0]} min\nHenri: ${p.avgResp[1]} min`;
+    document.getElementById('conflictCnt').innerText = p.conflict.reduce((a,b)=>a+b,0);
+    document.getElementById('affectionCnt').innerText= p.affection.reduce((a,b)=>a+b,0);
+  }
+
+  function drawCharts(p){
+    // 1. Activity
+    charts.activity = new Chart('activityChart', {
+      type:'bar',
+      data:{ labels:p.days, datasets:[
+        { label:'Xander', data:p.xander, backgroundColor:'#FF6384'},
+        { label:'Henri',  data:p.henri,  backgroundColor:'#36A2EB'}
+      ]},
+      options:{ onClick:onBarClick }
+    });
+    // 2. Balance
+    charts.balance = new Chart('balanceChart', {
+      type:'line',
+      data:{ labels:p.days, datasets:[
+        { label:'Xander %', data:p.days.map((d,i)=>Math.round(100*p.xander[i]/(p.xander[i]+p.henri[i]))), borderColor:'#4b2ef8', fill:false },
+        { label:'Henri %',  data:p.days.map((d,i)=>Math.round(100*p.henri[i]/(p.xander[i]+p.henri[i]))), borderColor:'#0097e6', fill:false }
+      ]},
+      options:{ scales:{ y:{ beginAtZero:true, max:100 }}}
+    });
+    // 3. Response
+    charts.response = new Chart('responseChart', {
+      type:'bar',
+      data:{ labels:['Xander','Henri'], datasets:[{
+        label:'Avg Response (min)',
+        data:p.avgResp,
+        backgroundColor:['#4b2ef8','#0097e6']
+      }]}
+    });
+    // 4. Conflict
+    charts.conflict = new Chart('conflictChart', {
+      type:'bar',
+      data:{ labels:p.days, datasets:[{ label:'Conflict', data:p.conflict, backgroundColor:'#FFCE56'}]},
+      options:{ onClick:onBarClick }
+    });
+    // 5. Affection
+    charts.affection = new Chart('affectionChart', {
+      type:'bar',
+      data:{ labels:p.days, datasets:[{ label:'Affection', data:p.affection, backgroundColor:'#9966FF'}]},
+      options:{ onClick:onBarClick }
+    });
+  }
+
+  function createTimeline(p){
+    const items = p.days.map((d,i)=>({
+      id: i, start: d,
+      content: `<span style="font-weight:bold;color:#222;font-size:1.18em">${d}</span> 
+        ${(p.aha[i]    ? '🔥' : '')}
+        ${(p.conflict[i]? '❗' : '')}
+        ${(p.breathe[i]? '🌬️' : '')}
+        ${(p.nou[i]    ? '⏰' : '')}
+        ${(p.sexual[i] ? '❤️' : '')}`
+    }));
+    timeline = new vis.Timeline(document.getElementById('timeline'), new vis.DataSet(items), { onSelect:onTimelineSelect });
+  }
+
+  function showDetails(day){
+    const info = processed.byDay[day], ul=document.getElementById('detailList');
+    document.getElementById('detailTitle').innerText = `Messages on ${day}`;
+    ul.innerHTML = '';
+    info.msgs.forEach(m=>{
+      const li = document.createElement('li');
+      li.innerHTML = `<strong>${m.speaker}</strong> ${m.datetime.toLocaleTimeString()}: ${m.message}`;
+      if(m.isH) li.classList.add('isH');
+      if(m.isC) li.classList.add('isC');
+      if(m.isB) li.classList.add('isB');
+      if(m.isN) li.classList.add('isN');
+      if(m.isS) li.classList.add('isS');
+      if(m.isA) li.classList.add('isA');
+      ul.appendChild(li);
+    });
+    document.getElementById('detailPanel').style.display='block';
+  }
+  function onBarClick(evt, elems){
+    if(!elems.length) return;
+    const idx = elems[0].index, day=processed.days[idx];
+    showDetails(day);
+  }
+  function onTimelineSelect(props){
+    if(!props.items.length) return;
+    showDetails(processed.days[props.items[0]]);
+  }
+
+  function initFilters(){
+    const s=document.getElementById('startDate'), e=document.getElementById('endDate'),
+          tx=document.getElementById('toggleXander'), th=document.getElementById('toggleHenri');
+    s.min=processed.days[0];  e.max=processed.days.at(-1);
+    s.value=processed.days[0]; e.value=processed.days.at(-1);
+    [s,e,tx,th].forEach(el=>el.addEventListener('change',applyFilters));
+  }
+  function applyFilters(){
+    const s=document.getElementById('startDate').value,
+          e=document.getElementById('endDate').value,
+          showX=document.getElementById('toggleXander').checked,
+          showH=document.getElementById('toggleHenri').checked;
+    const idxs = processed.days.map((d,i)=>d>=s&&d<=e?i:-1).filter(i=>i>=0);
+    const slice = arr => idxs.map(i=>arr[i]);
+
+    charts.activity.data.labels   = slice(processed.days);
+    charts.activity.data.datasets[0].data = showX? slice(processed.xander):[];
+    charts.activity.data.datasets[1].data = showH? slice(processed.henri):[];
+    charts.activity.update();
+
+    charts.balance.data.labels = slice(processed.days);
+    charts.balance.data.datasets[0].data = slice(processed.days).map((d,i)=>{
+      const x=processed.xander[idxs[i]], h=processed.henri[idxs[i]];
+      return showX&&x+h? Math.round(100*x/(x+h)):null;
+    });
+    charts.balance.data.datasets[1].data = slice(processed.days).map((d,i)=>{
+      const x=processed.xander[idxs[i]], h=processed.henri[idxs[i]];
+      return showH&&x+h? Math.round(100*h/(x+h)):null;
+    });
+    charts.balance.update();
+
+    ['conflict','affection'].forEach((cat,i)=>{
+      charts[cat].data.labels   = slice(processed.days);
+      charts[cat].data.datasets[0].data = slice(processed[cat]);
+      charts[cat].update();
+    });
+  }
+
+  // Error display
+  function showError(msg) {
+    document.body.innerHTML = `
+      <div style="color:#fff;background:#a00;padding:2em 1em 3em 1em;text-align:center;font-size:1.6em;">
+        ⚠️ <b>Could not load chat data.</b><br>
+        <span style="font-size:.8em;color:#ffd;">${msg}</span>
+        <br><br>
+        <em>If you see this, make sure your Google Sheet is published to the web (File → Share → Publish to web) and try again.</em>
+      </div>`;
+  }
+
+  // Bootstrap: fetch → process → render
+  Tabletop.init({
+    key: publicSheetUrl,
+    simpleSheet: true,
+    callback: data => {
+      try {
+        if(!data.length) throw new Error('No data loaded.');
+        rawData   = data.map(parseRow);
+        processed = processData(rawData);
+        updateSummary(processed);
+        drawCharts(processed);
+        createTimeline(processed);
+        initFilters();
+      } catch(e) {
+        showError('No chat data found: '+e);
+      }
+    },
+    error: showError
+  });
+
+})();
+</script>
+</body>
+</html>
